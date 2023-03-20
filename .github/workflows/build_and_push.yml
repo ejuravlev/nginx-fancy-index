@@ -2,8 +2,8 @@ name: build_and_push
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'
     path-ignore:
       - '**/README.md'
 
