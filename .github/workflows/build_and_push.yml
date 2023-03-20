@@ -10,7 +10,7 @@ env:
   NGINX_VERSION: 1.22.1
 
 jobs:
-  build&push:
+  build_and_push:
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
