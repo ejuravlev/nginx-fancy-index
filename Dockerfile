@@ -1,25 +1,51 @@
-ARG ALPINE_VERSION=3.17
+ARG DEBIAN_VERSION=11
 
-FROM alpine:${ALPINE_VERSION}
+FROM debian:${DEBIAN_VERSION}
 
-ARG NGINX_VERSION=1.22.1
+ARG NGINX_VERSION=1.23.3
 
-WORKDIR /build
-
-RUN apk update && \
-    apk add --no-cache wget gzip linux-headers \
-                       openssl-dev pcre2-dev zlib-dev openssl abuild \
-                        musl-dev libxslt libxml2-utils make mercurial  \
-                        gcc unzip git xz g++ coreutils && \
+RUN apt update && \
+    apt install -y  wget \
+                    git \
+                    gcc \
+                    libssl-dev \
+                    make \
+                    libpcre3-dev \
+                    zlib1g-dev \
+                    libxml2-dev \
+                    libxslt-dev \
+                    libgd-dev \
+                    libgeoip-dev \
+                    libperl-dev && \
     wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
     gunzip -c nginx-${NGINX_VERSION}.tar.gz | tar -xvf - && \
     git clone https://github.com/aperezdc/ngx-fancyindex.git ngx-fancyindex && \
     cd nginx-${NGINX_VERSION} && \
-    ./configure --add-module=../ngx-fancyindex && \
+    ./configure \
+        --add-module=../ngx-fancyindex \
+        --conf-path=/etc/nginx/nginx.conf \
+        --error-log-path=/var/log/nginx/error.log \ 
+        --http-log-path=/var/log/nginx/access.log && \
     make && make install && \
-    apk del wget gzip linux-headers \
-            openssl-dev pcre2-dev zlib-dev openssl abuild \
-            musl-dev libxslt libxml2-utils make mercurial  \
-            gcc unzip git xz g++ coreutils && \
-    rm -rf /var/cache/apk/* && \
-    rm -rf /build
+    apt remove -y wget \
+                    git \
+                    gcc \
+                    libssl-dev \
+                    make \
+                    libpcre3-dev \
+                    zlib1g-dev \
+                    libxml2-dev \
+                    libxslt-dev \
+                    libgd-dev \
+                    libgeoip-dev \
+                    libperl-dev && \
+    apt autoremove -y && \
+    rm -rf /var/lib/apt/lists/* && \
+    cd .. && rm -rf nginx-* && rm -rf ngx-fancyindex
+
+ENV PATH="${PATH}:/usr/local/nginx/sbin/"
+
+EXPOSE 80
+EXPOSE 443
+
+CMD ["nginx", "-g", "daemon off;"]
